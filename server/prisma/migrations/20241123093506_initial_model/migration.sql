@@ -40,6 +40,7 @@ CREATE TABLE "Asset" (
     "userId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
+    "version" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -88,6 +89,7 @@ CREATE TABLE "Achievement" (
     "description" TEXT NOT NULL,
     "level" INTEGER NOT NULL,
     "reward" INTEGER NOT NULL,
+    "requirement" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -137,6 +139,8 @@ CREATE TABLE "Task" (
     "image" TEXT NOT NULL,
     "expired" TIMESTAMP(3),
     "type" TEXT NOT NULL,
+    "url" TEXT,
+    "urlType" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -148,6 +152,7 @@ CREATE TABLE "TaskRecord" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "taskId" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -155,17 +160,22 @@ CREATE TABLE "TaskRecord" (
 );
 
 -- CreateTable
-CREATE TABLE "TransferQueue" (
-    "id" TEXT NOT NULL,
-    "fromId" TEXT NOT NULL,
-    "toId" TEXT NOT NULL,
-    "assetType" TEXT NOT NULL,
+CREATE TABLE "AssetTransferTemp" (
+    "transfer_id" TEXT NOT NULL,
+    "from_user_id" TEXT NOT NULL,
+    "to_user_id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
-    "status" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "from_before_amount" DOUBLE PRECISION NOT NULL,
+    "from_after_amount" DOUBLE PRECISION NOT NULL,
+    "to_before_amount" DOUBLE PRECISION NOT NULL,
+    "to_after_amount" DOUBLE PRECISION NOT NULL,
+    "type" TEXT NOT NULL,
+    "remark" TEXT NOT NULL,
+    "is_handled" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "TransferQueue_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "AssetTransferTemp_pkey" PRIMARY KEY ("transfer_id")
 );
 
 -- CreateIndex
@@ -196,13 +206,10 @@ CREATE INDEX "UserAchievement_achievementId_idx" ON "UserAchievement"("achieveme
 CREATE INDEX "ContestReward_contestMatchId_idx" ON "ContestReward"("contestMatchId");
 
 -- CreateIndex
+CREATE INDEX "TaskRecord_userId_taskId_idx" ON "TaskRecord"("userId", "taskId");
+
+-- CreateIndex
 CREATE INDEX "TaskRecord_userId_idx" ON "TaskRecord"("userId");
 
 -- CreateIndex
 CREATE INDEX "TaskRecord_taskId_idx" ON "TaskRecord"("taskId");
-
--- CreateIndex
-CREATE INDEX "TransferQueue_fromId_idx" ON "TransferQueue"("fromId");
-
--- CreateIndex
-CREATE INDEX "TransferQueue_toId_idx" ON "TransferQueue"("toId");
