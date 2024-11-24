@@ -14,5 +14,3 @@ export class User {
   @ApiProperty()
   setting: Setting;
 }
-
-export type UserType = User;
