@@ -5,9 +5,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AuthMiddleware } from './middlewares/auth.middleware';
 import { CheckinModule } from './checkin/checkin.module';
+import { TaskModule } from './task/task.module';
 
 @Module({
-  imports: [PrismaModule, UserModule, CheckinModule],
+  imports: [PrismaModule, UserModule, CheckinModule, TaskModule],
   controllers: [AppController],
   providers: [AppService],
 })
