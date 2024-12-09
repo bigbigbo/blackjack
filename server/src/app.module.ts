@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { CassandraModule } from './common/cassandra/cassandra.module';
 
 import { UserModule } from './user/user.module';
 import { AuthMiddleware } from './middlewares/auth.middleware';
@@ -17,6 +18,7 @@ import { DistributedLockModule } from './common/distributed-lock/distributed-loc
       type: 'single',
       url: process.env.REDIS_URL,
     }),
+    CassandraModule,
     DistributedLockModule,
     UserModule,
     CheckinModule,
