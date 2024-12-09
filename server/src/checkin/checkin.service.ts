@@ -2,7 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { UpdateCheckinDto } from './dto/update-checkin.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class CheckinService {
@@ -53,6 +53,19 @@ export class CheckinService {
           },
         }),
         // TODO: 更新用户积分
+        prisma.asset.update({
+          where: {
+            userId_type: {
+              userId: user.user.id,
+              type: 'jack',
+            },
+          },
+          data: {
+            amount: {
+              increment: reward,
+            },
+          },
+        }),
       ]);
     });
 

@@ -154,7 +154,19 @@ export class TaskService {
           where: { id: record.id },
           data: { status: 'completed' },
         }),
-        // TODO: 增加用户资产
+        prisma.asset.update({
+          where: {
+            userId_type: {
+              userId: user.user.id,
+              type: 'jack',
+            },
+          },
+          data: {
+            amount: {
+              increment: task.reward,
+            },
+          },
+        }),
       ]);
     });
 
