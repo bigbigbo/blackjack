@@ -4,10 +4,14 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import dayjs from 'dayjs';
 import { TaskRecord } from '@prisma/client';
-
+import { AssetService } from 'src/asset/asset.service';
+import { Type } from 'src/asset/dto/transfer.dto';
 @Injectable()
 export class TaskService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly assetService: AssetService,
+  ) {}
 
   async findAll(user: User) {
     const tasks = await this.prisma.task.findMany();
@@ -148,25 +152,34 @@ export class TaskService {
       }
     }
 
+    const [fromAsset, toAsset] = await Promise.all([
+      this.prisma.asset.findUnique({
+        where: { userId_type: { userId: process.env.SYSTEM_USER_ID, type: 'jack' } },
+      }),
+      this.prisma.asset.findUnique({
+        where: { userId_type: { userId: user.user.id, type: 'jack' } },
+      }),
+    ]);
+
     const [taskRecord] = await this.prisma.$transaction(async (prisma) => {
       return Promise.all([
         prisma.taskRecord.update({
           where: { id: record.id },
           data: { status: 'completed' },
         }),
-        prisma.asset.update({
-          where: {
-            userId_type: {
-              userId: user.user.id,
-              type: 'jack',
-            },
+        this.assetService.transfer(
+          {
+            from_user_id: process.env.SYSTEM_USER_ID,
+            to_user_id: user.user.id,
+            token: 'jack',
+            amount: task.reward,
+            fromVersion: fromAsset.version,
+            toVersion: toAsset.version,
+            type: Type.Task,
+            remark: `task id: ${id}`,
           },
-          data: {
-            amount: {
-              increment: task.reward,
-            },
-          },
-        }),
+          prisma,
+        ),
       ]);
     });
 

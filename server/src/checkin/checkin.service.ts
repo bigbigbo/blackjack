@@ -1,12 +1,14 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { CreateCheckinDto } from './dto/create-checkin.dto';
-import { UpdateCheckinDto } from './dto/update-checkin.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as dayjs from 'dayjs';
-
+import { AssetService } from 'src/asset/asset.service';
+import { Type } from 'src/asset/dto/transfer.dto';
 @Injectable()
 export class CheckinService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly assetService: AssetService,
+  ) {}
 
   private getReward(hitDays: number) {
     const rewards = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000];
@@ -44,6 +46,15 @@ export class CheckinService {
     const reward = this.getReward(nextDay);
 
     // 创建签到服务
+    const [fromAsset, toAsset] = await Promise.all([
+      this.prisma.asset.findUnique({
+        where: { userId_type: { userId: process.env.SYSTEM_USER_ID, type: 'jack' } },
+      }),
+      this.prisma.asset.findUnique({
+        where: { userId_type: { userId: user.user.id, type: 'jack' } },
+      }),
+    ]);
+
     const [record] = await this.prisma.$transaction(async (prisma) => {
       return Promise.all([
         prisma.checkInRecord.create({
@@ -52,20 +63,19 @@ export class CheckinService {
             day: nextDay,
           },
         }),
-        // TODO: 更新用户积分
-        prisma.asset.update({
-          where: {
-            userId_type: {
-              userId: user.user.id,
-              type: 'jack',
-            },
+        this.assetService.transfer(
+          {
+            from_user_id: process.env.SYSTEM_USER_ID,
+            to_user_id: user.user.id,
+            token: 'jack',
+            amount: reward,
+            fromVersion: fromAsset.version,
+            toVersion: toAsset.version,
+            type: Type.Checkin,
+            remark: `checkin day: ${nextDay}`,
           },
-          data: {
-            amount: {
-              increment: reward,
-            },
-          },
-        }),
+          prisma,
+        ),
       ]);
     });
 
